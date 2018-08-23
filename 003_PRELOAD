@@ -1,0 +1,73 @@
+include('include');
+//TODO : in update effects ajouter les cells puis getcell ---> _CELLS[leek]
+function SetWeaponsCaracteristics() {
+	for (var item = 0; item <= 110; item++) {
+		if (isWeapon(item)) {
+			_ITEM_MINRANGE[item] = getWeaponMinRange(item);
+			_ITEM_MAXRANGE[item] = getWeaponMaxRange(item);
+			_ITEM_COOLDOWN[item] = 0;
+			_ITEM_INLINE[item] = isInlineWeapon(item);
+			_ITEM_AREA[item] = getWeaponArea(item);
+			_ITEM_COST[item] = getWeaponCost(item);
+			_ITEM_EFFECTS[item] = getWeaponEffects(item);
+		}
+		if (isChip(item)) {
+			_ITEM_MINRANGE[item] = getChipMinRange(item);
+			_ITEM_MAXRANGE[item] = getChipMaxRange(item);
+			_ITEM_COOLDOWN[item] = 0;
+			_ITEM_INLINE[item] = isInlineChip(item);
+			_ITEM_AREA[item] = getChipArea(item);
+			_ITEM_COST[item] = getChipCost(item);
+			_ITEM_EFFECTS[item] = getChipEffects(item);
+		}
+	}
+}
+
+function UpdateLeekEffects() {
+	_MY_SELF = getLeek();
+	_DEAD_ALLIES = getDeadAllies();
+	_DEAD_ENEMIES = getDeadEnemies();
+	_ALIVE_ALLIES = getAliveAllies();
+	_ALIVE_ENEMIES = getAliveEnemies();
+	_ALL_LEEKS = _ALIVE_ALLIES + _ALIVE_ENEMIES;
+
+	for (var leek in _ALL_LEEKS) {
+		var Entity_type = bulbname(leek, leek)[0];
+		_CELL[leek] = getCell(leek);
+		_EFFECTS[leek] = getEffects(leek);
+		_LIFE[leek] = getLife(leek);
+		_ABSOLUTE_SHIELD[leek] = getAbsoluteShield(leek);
+		_RELATIVE_SHIELD[leek] = getRelativeShield(leek);
+		_AGILITY[leek] = getAgility(leek);
+		_STRENGTH[leek] = getStrength(leek);
+		_MAGIC[leek] = getMagic(leek);
+		_MP[leek] = getMP(leek);
+		_TP[leek] = getTP(leek);
+		_RESISTANCE[leek] = getResistance(leek);
+		_SCIENCE[leek] = getScience(leek);
+		_TOTAL_LIFE[leek] = getTotalLife(leek);
+		_WISDOM[leek] = getWisdom(leek);
+		_DAMAGE_RETURN[leek] = getDamageReturn(leek);
+		if (isAlly(leek)) { //isAlly
+			if (isSummon(leek)) { //LesBulbes
+				if (Entity_type == ENTITY_LIGHTNING_BULB) _COUNT_LIGHTNING_ALLY++;
+				if (Entity_type == ENTITY_FIRE_BULB) _COUNT_FIRE_ALLY++;
+				if (Entity_type == ENTITY_METALLIC_BULB) _COUNT_METALLIC_ALLY++;
+				if (Entity_type == ENTITY_HEALER_BULB) _COUNT_HEALER_ALLY++;
+				if (Entity_type == ENTITY_ICED_BULB) _COUNT_ICED_ALLY++;
+				if (Entity_type == ENTITY_ROCKY_BULB) _COUNT_ROCKY_ALLY++;
+				if (Entity_type == ENTITY_PUNY_BULB) _COUNT_PUNY_ALLY++;
+			}
+		} else { //isEnemy
+			if (isSummon(leek)) {
+				if (Entity_type == ENTITY_LIGHTNING_BULB) _COUNT_LIGHTNING_ENEMY++;
+				if (Entity_type == ENTITY_FIRE_BULB) _COUNT_FIRE_ENEMY++;
+				if (Entity_type == ENTITY_METALLIC_BULB) _COUNT_METALLIC_ENEMY++;
+				if (Entity_type == ENTITY_HEALER_BULB) _COUNT_HEALER_ENEMY++;
+				if (Entity_type == ENTITY_ICED_BULB) _COUNT_ICED_ENEMY++;
+				if (Entity_type == ENTITY_ROCKY_BULB) _COUNT_ROCKY_ENEMY++;
+				if (Entity_type == ENTITY_PUNY_BULB) _COUNT_PUNY_ENEMY++;
+			}
+		}
+	}
+}
