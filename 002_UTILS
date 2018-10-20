@@ -1,40 +1,169 @@
 include("include");
 
-
-function bulbname(entity, leekatq) {
-	var MetaBulbCoef = _STRENGTH[leekatq] > 0 ? 25 : 0;
-	var GueriBulbCoef = _MAGIC[leekatq] > 0 ? 30 : 20;
-	if (isSummon(entity)) {
-	var name = getName(entity);
-		if (name == "metallic_bulb") {
-			return [ENTITY_METALLIC_BULB, MetaBulbCoef];
-		} else if (name == "healer_bulb") {
-			return [ENTITY_HEALER_BULB, GueriBulbCoef];
-		} else if (name == "lightning_bulb") {
-			return [ENTITY_LIGHTNING_BULB, 20];
-		} else if (name == "fire_bulb") {
-			return [ENTITY_FIRE_BULB, 18];
-		} else if (name == "iced_bulb") {
-			return [ENTITY_ICED_BULB, 16];
-		} else if (name == "rocky_bulb") {
-			return [ENTITY_ROCKY_BULB, 10];
-		} else if (name == "puny_bulb") {
-			return [ENTITY_PUNY_BULB, 8];
-		}
-	} else {
-		return [ENTITY_LEEK, 100*TimesFocusLeekCasePoisonLeek()];
+function getAreaNumber(@item) {
+	var area = isChip(item) ? getChipArea(item) : getWeaponArea(item);
+	if (area == AREA_CIRCLE_1) {
+		return 1;
 	}
+	if (area == AREA_CIRCLE_2) {
+		return 2;
+	}
+	if (area == AREA_CIRCLE_3) {
+		return 3;
+	}
+	if (area == AREA_LASER_LINE || area == AREA_POINT) {
+		return 0;
+	}
+
 }
 
-function TimesFocusLeekCasePoisonLeek() {
-	if (_STRENGTH[EnemyLeekG] < 100) {
-		return 0.4;
-	} else return 1;
+function cellarea1(c) {
+	if (isObstacle(c)) return;
+	var tabcellz = [];
+	var x = getCellX(c);
+	var y = getCellY(c);
+	push(tabcellz, c);
+	var cell;
+	cell = getCellFromXY(x + 1, y);
+	if (cell != null && !isObstacle(cell)) {
+		push(tabcellz, cell);
+	}
+	cell = getCellFromXY(x - 1, y);
+	if (cell != null && !isObstacle(cell)) {
+		push(tabcellz, cell);
+	}
+
+	cell = getCellFromXY(x, y + 1);
+	if (cell != null && !isObstacle(cell)) {
+		push(tabcellz, cell);
+	}
+
+	cell = getCellFromXY(x, y - 1);
+	if (cell != null && !isObstacle(cell)) {
+		push(tabcellz, cell);
+	}
+	return tabcellz;
+}
+
+function cellarea2(c) {
+	if (isObstacle(c)) return;
+	var tabcellz = [];
+	pushAll(tabcellz, cellarea1(c));
+	var x = getCellX(c);
+	var y = getCellY(c);
+	var cell;
+	cell = getCellFromXY(x + 1, y + 1);
+	if (cell != null && !isObstacle(cell)) {
+		push(tabcellz, cell);
+	}
+	cell = getCellFromXY(x + 1, y - 1);
+	if (cell != null && !isObstacle(cell)) {
+		push(tabcellz, cell);
+	}
+
+	cell = getCellFromXY(x - 1, y + 1);
+	if (cell != null && !isObstacle(cell)) {
+		push(tabcellz, cell);
+	}
+
+	cell = getCellFromXY(x - 1, y - 1);
+	if (cell != null && !isObstacle(cell)) {
+		push(tabcellz, cell);
+	}
+
+	cell = getCellFromXY(x + 2, y);
+	if (cell != null && !isObstacle(cell)) {
+		push(tabcellz, cell);
+	}
+
+	cell = getCellFromXY(x, y + 2);
+	if (cell != null && !isObstacle(cell)) {
+		push(tabcellz, cell);
+	}
+
+	cell = getCellFromXY(x, y - 2);
+	if (cell != null && !isObstacle(cell)) {
+		push(tabcellz, cell);
+	}
+
+	cell = getCellFromXY(x - 2, y);
+	if (cell != null && !isObstacle(cell)) {
+		push(tabcellz, cell);
+	}
+	return tabcellz;
+}
+
+function cellarea3(c) {
+	if (isObstacle(c)) return;
+	var tabcellz = [];
+	pushAll(tabcellz, cellarea2(c));
+	var x = getCellX(c);
+	var y = getCellY(c);
+	var cell;
+	cell = getCellFromXY(x + 2, y + 1);
+	if (cell != null && !isObstacle(cell)) {
+		push(tabcellz, cell);
+	}
+
+	cell = getCellFromXY(x + 2, y - 1);
+	if (cell != null && !isObstacle(cell)) {
+		push(tabcellz, cell);
+	}
+
+	cell = getCellFromXY(x - 2, y + 1);
+	if (cell != null && !isObstacle(cell)) {
+		push(tabcellz, cell);
+	}
+
+	cell = getCellFromXY(x - 2, y - 1);
+	if (cell != null && !isObstacle(cell)) {
+		push(tabcellz, cell);
+	}
+
+	cell = getCellFromXY(x + 1, y + 2);
+	if (cell != null && !isObstacle(cell)) {
+		push(tabcellz, cell);
+	}
+	cell = getCellFromXY(x + 1, y - 2);
+	if (cell != null && !isObstacle(cell)) {
+		push(tabcellz, cell);
+	}
+
+	cell = getCellFromXY(x - 1, y + 2);
+	if (cell != null && !isObstacle(cell)) {
+		push(tabcellz, cell);
+	}
+
+	cell = getCellFromXY(x - 1, y - 2);
+	if (cell != null && !isObstacle(cell)) {
+		push(tabcellz, cell);
+	}
+
+	cell = getCellFromXY(x + 3, y);
+	if (cell != null && !isObstacle(cell)) {
+		push(tabcellz, cell);
+	}
+
+	cell = getCellFromXY(x, y + 3);
+	if (cell != null && !isObstacle(cell)) {
+		push(tabcellz, cell);
+	}
+
+	cell = getCellFromXY(x, y - 3);
+	if (cell != null && !isObstacle(cell)) {
+		push(tabcellz, cell);
+	}
+
+	cell = getCellFromXY(x - 3, y);
+	if (cell != null && !isObstacle(cell)) {
+		push(tabcellz, cell);
+	}
+	return tabcellz;
 }
 
 function EnemyLeekArray() {
 	var array = [];
-	for (var i in _ALIVE_ENEMIES) {
+	for (var i in getAliveEnemies()) {
 		if (!isSummon(i)) {
 			push(array, i);
 		}
@@ -45,16 +174,147 @@ function EnemyLeekArray() {
 function EnemyLeek() {
 	var bestleek;
 	var BestDist = 99999;
-	for (var leek in _ALIVE_ENEMIES) {
+	for (var leek in EnemyLeekArray()) {
 		var g = getPathLength(_CELL[_MY_SELF], _CELL[leek]);
-		if (!isSummon(leek) && g < BestDist) {
+		if (g < BestDist) {
 			BestDist = g;
 			bestleek = leek;
 		}
 	}
 	return bestleek;
 }
-if (getTurn()==1 || EnemyLeekG!=null && isDead(EnemyLeekG)) EnemyLeekG = EnemyLeek();
+if (getTurn() == 1 || EnemyLeekG != null && isDead(EnemyLeekG) || EnemyLeekG == null) EnemyLeekG = EnemyLeek();
+
+function bulbname(entity, leekatq) {
+	var MetaBulbCoef = _STRENGTH[leekatq] > 0 ? 7 : 0;
+	var GueriBulbCoef = _MAGIC[leekatq] > 0 ? 6 : 4;
+	if (isSummon(entity)) {
+		var name = getName(entity);
+		if (name == "metallic_bulb") {
+			return [ENTITY_METALLIC_BULB, MetaBulbCoef];
+		} else if (name == "healer_bulb") {
+			return [ENTITY_HEALER_BULB, GueriBulbCoef];
+		} else if (name == "lightning_bulb") {
+			return [ENTITY_LIGHTNING_BULB, 5];
+		} else if (name == "fire_bulb") {
+			return [ENTITY_FIRE_BULB, 4];
+		} else if (name == "iced_bulb") {
+			return [ENTITY_ICED_BULB, 4];
+		} else if (name == "rocky_bulb") {
+			return [ENTITY_ROCKY_BULB, 3];
+		} else if (name == "puny_bulb") {
+			return [ENTITY_PUNY_BULB, 2];
+		}
+	} else {
+		return [ENTITY_LEEK, 25];
+	}
+}
+
+function RealLeeklife(@leek) {
+	var life = _LIFE[leek];
+	for (var eff in _EFFECTS[leek]) {
+		if (eff[0] == EFFECT_POISON) {
+			life -= eff[1];
+		}
+		if (eff[0] == EFFECT_HEAL) {
+			life += eff[1];
+		}
+	}
+	return life;
+}
+
+function getItemName(Item) {
+	if (isChip(Item)) {
+		return getChipName(Item);
+	} else return getWeaponName(Item);
+}
+
+function spawn(@BulbChip, @ai) {
+	var CellToUse;
+	var getcellstouse = getCellsToUseChip(BulbChip, _MY_SELF);
+	var BestDist;
+	var BestCell;
+	if (_IS_GENTLE_BULB[BulbChip]) {
+		BestDist = 0;
+		for (var cell in getcellstouse) { //GENTLE BULB
+			var dist = getCellDistance(getCell(EnemyLeekG), cell);
+			if (dist > BestDist) {
+				BestDist = dist;
+				BestCell = cell;
+			}
+		}
+	} else {
+		BestDist = 99999;
+		for (var cell in getcellstouse) { //NOT GENTLE BULB
+			var Item = _BEST_ITEM_NOT_GENTLE_BULB[BulbChip];
+			var dist = getCellDistance(getCellToUseChip(Item, EnemyLeekG), cell);
+			if (dist < BestDist) {
+				BestDist = dist;
+				BestCell = cell;
+			}
+		}
+	}
+	summon(BulbChip, BestCell, ai);
+}
+
+function getUsableItemsFromCellToCell(@cell, @cellto, item, ignore) {
+	var dist = getCellDistance(cell, cellto);
+	if (!_ITEM_INLINE[item] && dist <= _ITEM_MAXRANGE[item] && dist >= _ITEM_MINRANGE[item] && lineOfSight(cell, cellto, ignore)) {
+		return true;
+	}
+	if (dist >= _ITEM_MINRANGE[item] && dist <= _ITEM_MAXRANGE[item] && isOnSameLine(cell, cellto) && lineOfSight(cell, cellto, ignore)) {
+		return true;
+	}
+	return false;
+}
+
+function DivideAoe(area, dist, DMG) {
+	if (dist == 0) return DMG;
+	if (dist == 1 && area == 1) return DMG * 0.5;
+	if (dist == 1 && area == 2) return DMG * 0.75;
+	if (dist == 1 && area == 3) return DMG * 0.83;
+	if (dist == 2 && area == 2) return DMG * 0.50;
+	if (dist == 2 && area == 3) return DMG * 0.67;
+	if (dist == 3 && area == 3) return DMG * 0.50;
+	return 0;
+}
+
+function percentagetodist(@value, area) {
+	if (value == 100) return 0;
+	if (value == 83) return 1;
+	if (value == 67) return 2;
+	if (value == 50 && area == 3) return 3;
+	if (value == 75 && area == 2) return 1;
+	if (value == 50 && area == 1) return 1;
+	if (value == 50 && area == 2) return 2;
+	return value;
+}
+
+function getRealDmg(@item, @str, @relshield, @absshield, @magic, @distorpercentage, @enemy) {
+	var area = areaNbFromWeapon(item);
+	var dmg = DivideAoe(area, percentagetodist(distorpercentage, area), _ITEM_POWER[item]);
+	if (item == CHIP_DEVIL_STRIKE) dmg /= 5;
+	//FORCE
+	if (_ITEM_EFFECTS[item][0][0] == EFFECT_DAMAGE) dmg = dmg * (1 + str / 100) * (1 - relshield / 100) - absshield;
+	//MAGIC
+	if (_ITEM_EFFECTS[item][0][0] == EFFECT_POISON || _ITEM_EFFECTS[item][0][0] == EFFECT_SHACKLE_MAGIC || _ITEM_EFFECTS[item][0][0] == EFFECT_SHACKLE_MP || _ITEM_EFFECTS[item][0][0] == EFFECT_SHACKLE_STRENGTH || _ITEM_EFFECTS[item][0][0] == EFFECT_SHACKLE_TP) return dmg * 1 + _ITEM_EFFECTS[item][0][3] * (1 + magic / 100);
+	//WISDOM
+	if (_ITEM_EFFECTS[item][0][0] == EFFECT_HEAL || _ITEM_EFFECTS[item][0][0] == EFFECT_BOOST_MAX_LIFE) return dmg * (1 + _WISDOM[_MY_SELF] / 100);
+	//RESISTANCE
+	if (_ITEM_EFFECTS[item][0][0] == EFFECT_ABSOLUTE_SHIELD || _ITEM_EFFECTS[item][0][0] == EFFECT_RELATIVE_SHIELD) return dmg * (1 + _RESISTANCE[_MY_SELF] / 100);
+	//Summon
+	if (_ITEM_EFFECTS[item][0][0] == EFFECT_SUMMON) return 1;
+	//SCIENCE
+	if (_ITEM_EFFECTS[item][0][0] == EFFECT_BUFF_AGILITY || _ITEM_EFFECTS[item][0][0] == EFFECT_BUFF_RESISTANCE || _ITEM_EFFECTS[item][0][0] == EFFECT_BUFF_MP || _ITEM_EFFECTS[item][0][0] == EFFECT_BUFF_STRENGTH || _ITEM_EFFECTS[item][0][0] == EFFECT_BUFF_TP || _ITEM_EFFECTS[item][0][0] == EFFECT_BUFF_WISDOM) return dmg * (1 + _SCIENCE[_MY_SELF] / 100);
+	//AGILITY
+	if (_ITEM_EFFECTS[item][0][0] == EFFECT_DAMAGE_RETURN) return dmg * (1 + _AGILITY[_MY_SELF] / 100);
+	//LIBE
+	if (item == CHIP_LIBERATION) return HelpLibeScoreEnemy(enemy);
+	//INVERSION
+	if (item == CHIP_INVERSION) return dmg;
+	if (item == CHIP_DEVIL_STRIKE) dmg *= 5;
+	return dmg;
+}
 
 function ShieldScore(@leek) {
 	return _ABSOLUTE_SHIELD[leek] + _RELATIVE_SHIELD[leek] * 50;
@@ -62,13 +322,6 @@ function ShieldScore(@leek) {
 
 function isPositiv(@item) {
 	return _CHIP_ISPOSITIV[item];
-}
-
-function getColorFromDmg(@dmg) {
-	if (dmg == 0) {
-		return COLOR_GREEN;
-	}
-	return getColor((dmg*30), 100, 0);
 }
 
 function getItemMinDmg(@item) {
@@ -83,53 +336,34 @@ function getItemMinDmg(@item) {
 }
 
 function StartTestFunction() {
-	_OPS  = getOperations();
+	_OPS = getOperations();
 }
 
 function StopTestFunction(@name) {
-	debug('Opés test : '+name +" "+ ((getOperations()-_OPS)/1000)+' k ');
-}
-
-function AllAllysExept(@exeptionleek) {
-	var array = [];
-	if (exeptionleek!=null) {
-		for (var leek in _ALIVE_ALLIES) {
-			if (leek!=exeptionleek) {
-				push(array, leek);
-			}
-		}
-	} else return _ALIVE_ALLIES;
-	return array;
-}
-
-function FindItemsCellzInArrayItemsCellsTo(@item) {
-	for (var perdu in ArrayItemsCellsTo) {
-		if (perdu[1]==item) {
-			return perdu;
-		}
-	}
-	return null;
+	debug('Opés ' + name + " : " + ((getOperations() - _OPS) / 1000) + ' k ');
 }
 
 function HelpLibeScoreEnemy(@leek) {
-var effects = _EFFECTS;
-var Score = 0;
+	var effects = _EFFECTS[leek];
+	var Score = 0;
 	for (var eff in effects) {
-		if (eff[0]==EFFECT_POISON) Score -= (eff[1]*15);
-		if (eff[0]==EFFECT_BUFF_AGILITY) Score += (eff[1]*5);
-		if (eff[0]==EFFECT_BUFF_MP) Score += (eff[1]*100);
-		if (eff[0]==EFFECT_BUFF_RESISTANCE) Score += (eff[1]*80);
-		if (eff[0]==EFFECT_BUFF_STRENGTH) Score += (eff[1]*15);
-		if (eff[0]==EFFECT_BUFF_TP) Score += (eff[1]*105);
-		if (eff[0]==EFFECT_BUFF_WISDOM) Score += (eff[1]*70);
-		if (eff[0]==EFFECT_DAMAGE_RETURN) Score += (eff[1]*100);
-		if (eff[0]==EFFECT_HEAL) Score += (eff[1]*15);
-		if (eff[0]==EFFECT_SHACKLE_MAGIC) Score -= (eff[1]*25);
-		if (eff[0]==EFFECT_SHACKLE_MP) Score -= (eff[1]*100);
-		if (eff[0]==EFFECT_SHACKLE_STRENGTH) Score -= (eff[1]*25);
-		if (eff[0]==EFFECT_SHACKLE_TP) Score -= (eff[1]*100);
-		if (eff[0]==EFFECT_VULNERABILITY) Score -= (eff[1]*40);
-		
+		if (eff[0] == EFFECT_RELATIVE_SHIELD) Score += (eff[1] * 55);
+		if (eff[0] == EFFECT_ABSOLUTE_SHIELD) Score += (eff[1] * 25);
+		if (eff[0] == EFFECT_POISON) Score -= (eff[1] * 15);
+		if (eff[0] == EFFECT_BUFF_AGILITY) Score += (eff[1] * 5);
+		if (eff[0] == EFFECT_BUFF_MP) Score += (eff[1] * 100);
+		if (eff[0] == EFFECT_BUFF_RESISTANCE) Score += (eff[1] * 80);
+		if (eff[0] == EFFECT_BUFF_STRENGTH) Score += (eff[1] * 15);
+		if (eff[0] == EFFECT_BUFF_TP) Score += (eff[1] * 105);
+		if (eff[0] == EFFECT_BUFF_WISDOM) Score += (eff[1] * 70);
+		if (eff[0] == EFFECT_DAMAGE_RETURN) Score += (eff[1] * 100);
+		if (eff[0] == EFFECT_HEAL) Score += (eff[1] * 15);
+		if (eff[0] == EFFECT_SHACKLE_MAGIC) Score -= (eff[1] * 25);
+		if (eff[0] == EFFECT_SHACKLE_MP) Score -= (eff[1] * 100);
+		if (eff[0] == EFFECT_SHACKLE_STRENGTH) Score -= (eff[1] * 25);
+		if (eff[0] == EFFECT_SHACKLE_TP) Score -= (eff[1] * 100);
+		if (eff[0] == EFFECT_VULNERABILITY) Score -= (eff[1] * 40);
+
 	}
 	return Score;
 }
@@ -141,6 +375,7 @@ function getItemTargets(@item, @cell) {
 function getItemTargetsEnemyMinusAlly(@item, @cell) {
 	var JspCommentTappelerDsl = 0;
 	for (var target in getItemTargets(item, cell)) {
+		if (target == _MY_SELF) continue;
 		if (isAlly(target)) {
 			JspCommentTappelerDsl -= 1;
 		} else {
@@ -150,31 +385,9 @@ function getItemTargetsEnemyMinusAlly(@item, @cell) {
 		}
 	}
 	if (isPositiv(item)) {
-		JspCommentTappelerDsl = 0-JspCommentTappelerDsl;
+		JspCommentTappelerDsl = 0 - JspCommentTappelerDsl;
 	}
 	return JspCommentTappelerDsl;
-}
-
-function getTargetsItem(@item, @cell) {
-	var nbally = 0;
-	var nbenemy = 0;
-	for (var target in getItemTargets(item, cell)) {
-		if (isAlive(target) && target!=_MY_SELF) {
-			nbally++;
-		} else {
-			if (isEnemy(target)) {
-				nbenemy++;
-			}
-		}
-	}
-	return [nbenemy, nbally];
-}
-
-function isBuffer(@leek) {
-	if (_WISDOM[leek] >= 400 || _SCIENCE[leek] >= 400) {
-		return true;
-	}
-	return false;
 }
 
 function DoesHaveChip(@leek, @item) {
@@ -191,27 +404,6 @@ function isOnlyBulb(@item) {
 	if (IE[0][4] == 21 || IE[0][4] == 22) {
 		return true;
 	} else return false;
-}
-
-function RealLeeklife(@leek) {
-	var life = _LIFE[leek];
-	for (var eff in _EFFECTS[leek]) {
-		if (eff[0] == EFFECT_POISON) {
-			life -= eff[1];
-		}
-		if (eff[0] == EFFECT_HEAL) {
-			life += eff[1];
-		}
-	}
-	return life;
-}
-
-debug("Real Life " + getName(EnemyLeekG) + " : " + RealLeeklife(EnemyLeekG));
-//64
-function getColorCellFromDMG(@dmg) {
-	var clr = 250 - (dmg / 64);
-	var clrv = dmg / 64;
-	return getColor(clr, clrv, 0);
 }
 
 function DmgForTurn(@leek) {
@@ -234,17 +426,18 @@ function getNumberOfBulb() {
 	return [nbally, nbenemy];
 }
 
-function bulbcoef(@chip , @enemyPrincipal) {
-var MetaBulbCoef = _STRENGTH[enemyPrincipal] > 0 ? 35 : 0;
-var GueriBulbCoef = _MAGIC[enemyPrincipal] > 0 ? 50 : 35;
+function bulbcoef(@chip, @enemyPrincipal) {
+	var MetaBulbCoef = _STRENGTH[enemyPrincipal] > 0 ? 255 : 0;
+	if (_SCIENCE[enemyPrincipal] >= 400) MetaBulbCoef += 60;
+	var GueriBulbCoef = _MAGIC[enemyPrincipal] > 0 ? 45 : 20;
 	if (chip == CHIP_METALLIC_BULB) {
 		return [ENTITY_METALLIC_BULB, MetaBulbCoef];
 	} else if (chip == CHIP_HEALER_BULB) {
 		return [ENTITY_HEALER_BULB, GueriBulbCoef];
 	} else if (chip == CHIP_LIGHTNING_BULB) {
-		return [ENTITY_LIGHTNING_BULB, 20];
+		return [ENTITY_LIGHTNING_BULB, 30];
 	} else if (chip == CHIP_FIRE_BULB) {
-		return [ENTITY_FIRE_BULB, 18];
+		return [ENTITY_FIRE_BULB, 25];
 	} else if (chip == CHIP_ICED_BULB) {
 		return [ENTITY_ICED_BULB, 16];
 	} else if (chip == CHIP_ROCKY_BULB) {
@@ -255,7 +448,6 @@ var GueriBulbCoef = _MAGIC[enemyPrincipal] > 0 ? 50 : 35;
 }
 
 function AntidoteScore(@leek) {
-
 	var i = 0;
 	for (var eff in _EFFECTS) {
 		if (eff[0] == EFFECT_POISON) {
@@ -292,111 +484,14 @@ function DistFromArea(WeaponOrChip) {
 	if (IArea == AREA_CIRCLE_3) {
 		area = 4;
 	}
-	if (isPositiv(WeaponOrChip) || WeaponOrChip==CHIP_LIGHTNING) {
+	if (isPositiv(WeaponOrChip) || WeaponOrChip == CHIP_LIGHTNING) {
 		area = 0;
 	}
 	return area;
 }
 
-function getCellsToUseItem(@Item, @Cell) {
-	return isChip(Item) ? getCellsToUseChipOnCell(Item, Cell) : getCellsToUseWeaponOnCell(Item, Cell);
-}
-
-function getNumberOfPeopleInBrochette(@cellToShoot , @cellWereUAre) {
-var score =0;
-if (isOnSameLine(cellToShoot, cellWereUAre) && lineOfSight(cellToShoot, cellWereUAre)) {
-	for (var i in _ALIVE_ENEMIES) {
-			if (isOnSameLine(_CELL[i], cellToShoot) && isOnSameLine(_CELL[i], cellWereUAre) && lineOfSight(cellToShoot, i)) {
-				score ++;
-			}
-		}
-	}
-	return score;
-}
-
-function getCellToUseItemBasic(@item , @cellto) {
-	return isChip(item) ? getCellToUseChipOnCell(item, cellto) : getCellToUseWeaponOnCell(item, cellto);
-}
-
-function getCelltoUseItem(@item, @cellto) {
-	if (item == CHIP_DEVIL_STRIKE) {
-		return cellto;
-	}
-	if (cellto == null) {
-		return;
-	}
-	var BestScoreLazer = 0;
-	var BestShootLaser = 0;
-	var BestCell;
-	var BestDist = 99999;
-	var ArrayPossibleCellz = [];
-	for (var cell in getCellsToUseItem(item, cellto)) {
-		if (getCellDistance(_CELL[_MY_SELF], cell) <= _MP[_MY_SELF]) {
-			push(ArrayPossibleCellz, cell);
-		}
-	}
-	for (var c in ArrayPossibleCellz) {
-		if (getPathLength(_CELL[_MY_SELF], c) > _MP[_MY_SELF]) {
-			removeElement(ArrayPossibleCellz, c);
-		}
-	}
-	if (_ITEM_AREA[item] == AREA_LASER_LINE && !isPositiv(item)) {
-		for (var cell in ArrayPossibleCellz) {
-		var NbLeeks = getNumberOfPeopleInBrochette(cellto, cell);
-			if (NbLeeks>BestScoreLazer) {
-				BestScoreLazer = NbLeeks;
-			}
-		}
-		for (var cell in ArrayPossibleCellz) {
-			if (getNumberOfPeopleInBrochette(cellto, cell)<BestScoreLazer) {
-				removeElement(ArrayPossibleCellz, cell);
-			}
-		}
-	}
-	for (var cell in ArrayPossibleCellz) {
-		var dist = getCellDistance(_CELL[_MY_SELF], cell);
-		if (getCellDistance(cell, cellto) >= DistFromArea(item) && dist < BestDist) {
-			BestDist = dist;
-			BestCell = cell;
-		}
-	}
-	return BestCell;
-}
-
-
-function getCoefMp(@enemy) {
-	var Coef = 0.001;
-	if (getCellDistance(_CELL[_MY_SELF], _CELL[enemy]) < 20) {
-		Coef += 1;
-	}
-	if (getCellDistance(_CELL[_MY_SELF], _CELL[enemy]) < 15) {
-		Coef += 1.25;
-	}
-	if (getCellDistance(_CELL[_MY_SELF], _CELL[enemy]) < 10) {
-		Coef += 1.5;
-	}
-	if (getCellDistance(_CELL[_MY_SELF], _CELL[enemy]) < 5) {
-		Coef += 1.75;
-	}
-	if (LifePercent(getLife(), getTotalLife()) < 80) {
-		Coef += 1;
-	}
-	if (LifePercent(getLife(), getTotalLife()) < 60) {
-		Coef += 1.25;
-	}
-	if (LifePercent(getLife(), getTotalLife()) < 40) {
-		Coef += 2;
-	}
-	if (LifePercent(getLife(), getTotalLife()) < 20) {
-		Coef += 3;
-	}
-
-	return Coef;
-}
-
-
 function LifePercent(@life, @totallife) {
-	if (totallife>0) return life / totallife * 100;
+	if (totallife > 0) return life / totallife * 100;
 	else return 100;
 }
 
@@ -407,10 +502,11 @@ function GetTableauDesCells() {
 	}
 	return tab;
 }
+_ALL_CELLZ = GetTableauDesCells();
 
 function getAnnauxCells(cell, mindist, maxdist) {
 	var tab = [];
-	for (var i in GetTableauDesCells()) {
+	for (var i in _ALL_CELLZ) {
 		var dist = getCellDistance(cell, i);
 		if (dist <= maxdist && dist >= mindist && !isObstacle(i) && i != null) {
 			push(tab, i);
@@ -422,23 +518,24 @@ function getAnnauxCells(cell, mindist, maxdist) {
 function getNeighbouringCellz(@cell) {
 
 	var tabcellz = [];
-
+	var cellxy;
 	var x = getCellX(cell);
 	var y = getCellY(cell);
-	if (getCellFromXY(x + 1, y) != null && !isObstacle(getCellFromXY(x + 1, y))) {
-		push(tabcellz, getCellFromXY(x + 1, y));
+	cellxy = getCellFromXY(x + 1, y);
+	if (cellxy != null && !isObstacle(cellxy) && isEmptyCell(cellxy)) {
+		push(tabcellz, cellxy);
 	}
-
-	if (getCellFromXY(x - 1, y) != null && !isObstacle(getCellFromXY(x - 1, y))) {
-		push(tabcellz, getCellFromXY(x - 1, y));
+	cellxy = getCellFromXY(x - 1, y);
+	if (cellxy != null && !isObstacle(cellxy) && isEmptyCell(cellxy)) {
+		push(tabcellz, cellxy);
 	}
-
-	if (getCellFromXY(x, y + 1) != null && !isObstacle(getCellFromXY(x, y + 1))) {
-		push(tabcellz, getCellFromXY(x, y + 1));
-
-		if (getCellFromXY(x, y - 1) != null && !isObstacle(getCellFromXY(x, y - 1))) {
-			push(tabcellz, getCellFromXY(x, y - 1));
-		}
+	cellxy = getCellFromXY(x, y + 1);
+	if (cellxy != null && !isObstacle(cellxy) && isEmptyCell(cellxy)) {
+		push(tabcellz, cellxy);
+	}
+	cellxy = getCellFromXY(x, y - 1);
+	if (cellxy != null && !isObstacle(cellxy) && isEmptyCell(cellxy)) {
+		push(tabcellz, cellxy);
 	}
 	return tabcellz;
 }
@@ -447,41 +544,16 @@ function GetWalkableCells(cell, mp) {
 	var accesscells = [cell];
 	var set = [cell];
 	for (var i = 0; i < mp; i++) {
-
 		var Bords = [];
 		for (var cellz in set) {
-
-
-
-			var neighbors = getNeighbouringCellz(cellz);
-			for (var c in neighbors) {
+			for (var c in getNeighbouringCellz(cellz)) {
 				if (!inArray(accesscells, c)) {
 					push(accesscells, c);
 					push(Bords, c);
-
 				}
 			}
-
 		}
 		set = Bords;
 	}
 	return @accesscells;
-}
-
-_MY_WALKABLE_CELLZ = GetWalkableCells(_CELL[_MY_SELF], getMP());
-
-function getAreaNumber(@item) {
-	if (_ITEM_AREA[item] == AREA_CIRCLE_1) {
-		return 1;
-	}
-	if (_ITEM_AREA[item] == AREA_CIRCLE_2) {
-		return 2;
-	}
-	if (_ITEM_AREA[item] == AREA_CIRCLE_3) {
-		return 3;
-	}
-	if (_ITEM_AREA[item] == AREA_LASER_LINE || _ITEM_AREA[item] == AREA_POINT) {
-		return 0;
-	}
-
 }
