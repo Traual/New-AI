@@ -1,92 +1,80 @@
 include('include');
-global NearestEnemyIfFail = true;
 
 function Play(@enemys, @weapon, @cell, @mp, @enemyweapon, @tpa, @healAlly) {
-	TpOs();
+	StartTestFunction();
+	TryOneShoot(EnemyLeekG);
+	OS();
 	var tp = getTP();
 	var tabSummon = [];
 	var WhilePlay = 0;
+	var BulbAlreadySpawned = false;
+	var inv = GetItems(_MY_SELF);
+	var oldcell ;
 	while (true) {
-	UpdateLeekEffects();
-	if (ArrayItemsCellsTo[0][0]!=_CELL[_MY_SELF]) {
-		debug('Array Items Cells To Succefully Updated');
-		UpdateActions(_MY_SELF, getMP());
-	}
-		if (getLife() < getTotalLife() - (200 * (1 + getWisdom() / 100)) && getCooldown(CHIP_REGENERATION)==0 && inArray(getChips(), CHIP_REGENERATION)) {
-		useChip(CHIP_REGENERATION, _MY_SELF);
-		tp -= 8;
-	}
-	
-		
-		var inv = GetItems(_MY_SELF);
-		OS();
-		if (isDead(EnemyLeekG)) {
-			EnemyLeekG = EnemyLeek();
+		setCoef();
+		UpdateLeekEffects();
+		if (getLife() < getTotalLife() - (200 * (1 + getWisdom() / 100)) && getCooldown(CHIP_REGENERATION) == 0 && inArray(getChips(), CHIP_REGENERATION)) {
+			useChip(CHIP_REGENERATION, _MY_SELF);
+			tp -= 8;
+			UpdateLeekEffects();
 		}
-		if (getOperations() > 12000000) {
-			debug("Break : "+ (getOperations()/1000000) +" OP PLAY");
+		if (isDead(EnemyLeekG)) EnemyLeekG = EnemyLeek();
+		if (getOperations() > _PLAY_OP_LIMIT) {
+			debug("Break : " + (getOperations() / 1000000) + " OP PLAY");
 			break;
 		}
 		WhilePlay++;
-		if (DmgForTurn(_MY_SELF) > 350 && getCooldown(CHIP_ANTIDOTE)==0 && inArray(getChips(), CHIP_ANTIDOTE)) {
-			useChip(CHIP_ANTIDOTE, _MY_SELF);
-			tp -= 3;
-		}
-
 		if (inArray(getChips(), CHIP_LIBERATION)) {
 			for (var i in getAliveEnemies()) {
-			debug("Libe Score : " + getName(i) + " : "+LibeScore(i));
+				if (_RESISTANCE[i]==0 && _SCIENCE[i]==0) continue;
+				debug("Libe Score : " + getName(i) + " : " + HelpLibeScoreEnemy(i));
 				var cl = getCellToUseChip(CHIP_LIBERATION, i);
 				var celltp = getCellToUseChipOnCell(CHIP_TELEPORTATION, cl);
 				var PathTp = getPathLength(_CELL[_MY_SELF], celltp);
 				var Path = getPathLength(_CELL[_MY_SELF], cl);
-				if (LibeScore(i) > 12000 && PathTp <= 5 && Path>=10 && getCooldown(CHIP_LIBERATION)==0 && tp>=12) {
+				if (HelpLibeScoreEnemy(i) > 12000 && PathTp <= 5 && Path >= 10 && getCooldown(CHIP_LIBERATION) == 0 && tp >= 12) {
 					moveTowardCell(celltp);
 					useChipOnCell(CHIP_TELEPORTATION, cl);
 					useChip(CHIP_LIBERATION, i);
 					tp -= 12;
+					UpdateLeekEffects();
 				}
-				if (LibeScore(i) > 4000 && getPathLength(_CELL[_MY_SELF], cl) <= 5 && getCooldown(CHIP_LIBERATION)==0 && tp>=5) {
+				if (HelpLibeScoreEnemy(i) > 4000 && Path <= 6 && getCooldown(CHIP_LIBERATION) == 0 && tp >= 5) {
 					moveTowardCell(cl);
 					useChip(CHIP_LIBERATION, i);
 					tp -= 5;
+					UpdateLeekEffects();
 				}
 			}
 		}
-		var bi = getBestItemToUse(inv, getMP(), _MY_SELF, null, tp);
-		var TabCellzItem = FindItemsCellzInArrayItemsCellsTo(bi[0]);
-		var Target = TabCellzItem[2];
-		var BestShootingCell =  TabCellzItem[3];
-		var CellToShoot = TabCellzItem[4];
-		if (bi[0] == null || !inArray(inv, bi[0]) || tp<=0) {
+		var bi = getBestOnlyItem(_CELL[_MY_SELF] , _MP[_MY_SELF] , tp , oldcell);
+		var BestShootingCell = bi[2];
+		var CellToShoot = bi[1];
+		if (bi[0] == null || !inArray(inv, bi[0]) || tp <= 0) {
 			debug("break moving to hiden cells");
 			break;
 		}
-
 		debug("Using : " + getItemName(bi[0]));
 		if (isPositiv(bi[0]) != null || bi[0] == CHIP_INVERSION) {
 			if (BestShootingCell != null) {
 				mark(BestShootingCell, COLOR_RED);
 				moveTowardCell(CellToShoot);
 			}
-			if (bi[0] == CHIP_DEVIL_STRIKE && getCellDistance(_CELL[_MY_SELF], _CELL[Target]) < 3) {
+			if (bi[0] == CHIP_DEVIL_STRIKE && getCellDistance(_CELL[_MY_SELF], BestShootingCell) < 3) {
 				useChip(bi[0], _MY_SELF);
 				tp -= _ITEM_COST[bi[0]];
-				//removeElement(inventory, bi[0]);
 			}
-			//debug("I CAN PLAY MY F U C K I N G WEAPON !");
-			if (isChip(bi[0]) && getChipCooldown(bi[0]) == 0 && bi[0] != null || isWeapon(bi[0]) && bi[0] != null) {
-				while (_ITEM_COST[bi[0]] <= tp && canUseItem(bi[0], BestShootingCell) && RealLeeklife(Target)>0) {
+			if (count(getItemTargets(bi[0], BestShootingCell)) > 0) {
+				while (tp>=_ITEM_COST[bi[0]]) {
+					if (bi[0]!=getWeapon() && _ITEM_IS_WEAPON[bi[0]]) tp -= 1;
 					useItem(bi[0], BestShootingCell, getWeapon());
 					tp -= _ITEM_COST[bi[0]];
-					//removeElement(inventory, bi[0]);
+					if (_ITEM_COOLDOWN[bi[0]]>0 || count(getItemTargets(bi[0], BestShootingCell)) == 0) break;
 				}
 			}
-			useItem(bi[0], BestShootingCell, getWeapon());
-			tp -= _ITEM_COST[bi[0]];
 		}
-		if (isPositiv(bi[0]) == null && bi[0] != CHIP_TELEPORTATION && bi[0] != CHIP_ANTIDOTE && bi[0] != CHIP_INVERSION && bi[0] != CHIP_LIBERATION && bi[0] != CHIP_RESURRECTION) {
-			//debug("Pushing to tapsummon");
+		if (isPositiv(bi[0]) == null && bi[0] != CHIP_TELEPORTATION && bi[0] != CHIP_ANTIDOTE && bi[0] != CHIP_INVERSION && bi[0] != CHIP_LIBERATION && bi[0] != CHIP_RESURRECTION && !BulbAlreadySpawned) {
+			removeElement(inv, bi[0]);
 			tp -= _ITEM_COST[bi[0]];
 			push(tabSummon, bi[0]);
 		}
@@ -94,24 +82,18 @@ function Play(@enemys, @weapon, @cell, @mp, @enemyweapon, @tpa, @healAlly) {
 		if (bi[0] == CHIP_RESURRECTION) {
 			resurrect(DeadAlly()[0], getCellToUseChip(CHIP_FIRE_BULB, _MY_SELF));
 		}
-debugC("Opés Play  : "+WhilePlay+" : " + getOperations() / 1000 + " k ", COLOR_BLUE);
-	}
-	//debugC('While Times :' + WhilePlay, COLOR_GREEN);
-	debugC("Opés Play No Hidden Cellz : " + getOperations() / 1000 + " k ", COLOR_BLUE);
-	var BestHideCellz = getBestCellToHide(_CELL[_MY_SELF] , getMP() , EnemyLeekG);
-	//debugW("BCTH : " + BestHideCellz);
-	mark(BestHideCellz, COLOR_GREEN);
-	moveTowardCell(BestHideCellz);
+		if (isPositiv(bi[0]) != null || bi[0] == CHIP_INVERSION || bi[0] == CHIP_RESURRECTION) inv = GetItems(_MY_SELF);
+		oldcell = getCell();
+	}//Fin While
+	var BestHideCellz = getBestCellToHide(_MAP_DANGER, EnemyLeekG , GetWalkableCells(getCell(), getMP()));
+	moveTowardCell(BestHideCellz[0]);
 	for (var i in tabSummon) {
-		summon(i, getCellToUseChip(i, _MY_SELF), AiForBulbs);
+		spawn(i, AiForBulbs);
 	}
 	//FailSafe();
 	if (getWeapon() == null && getTP() >= 1 && inArray(getWeapons(), WEAPON_GAZOR)) {
 		setWeapon(WEAPON_GAZOR);
 	}
+	StopTestFunction("Play");
 	return tabSummon;
 }
-
-
-//if (getFightContext()!=FIGHT_CONTEXT_CHALLENGE) {
-//}
