@@ -3,408 +3,54 @@ global _NEAREST_ENEMY_LEEK;
 global _NEAREST_ENEMY_BULB;
 var _BEST_SAFE_CELL;
 var _BEST_TARGET;
-global _CHIP_DMG_POIS = 1; //1.7
-global _COEF_WEAPON_SHACKLE_DMG = 1;
-if (_STRENGTH[BestTarget(CHIP_FRACTURE)]==0) _COEF_WEAPON_SHACKLE_DMG = 0.000000001;
-
-function UpdateActions(@leekatq, @mp) {
-	ArrayItemsCellsTo = [];
-	for (var item in GetItems(leekatq)) {
-		var cell = _CELL[leekatq];
-		var Target = BestTarget(item);
-		var BestCellToFire = BestCellToShoot(leekatq, Target, mp, item);
-		var CellToUseItemOnCell = getCelltoUseItem(item, BestCellToFire);
-		var Path = getPathLength(cell, CellToUseItemOnCell);
-		push(ArrayItemsCellsTo, [cell, item, Target, BestCellToFire, CellToUseItemOnCell, Path]);
-	}
+function _COEF_WEAPON_SHACKLE_DMG(@item) {
+	if (isWeapon(item)) return 0.00000000000001;
+	else return 1;
 }
-
-function IsWorth(@item, @path, @mp, @cellto, @cell, @enemy, @leek) {
-	var Score = 0;
-	var RealLife = RealLeeklife(leek);
-	var EnemyRealLife = RealLeeklife(EnemyLeekG);
-	var EnemyStr = _STRENGTH[EnemyLeekG];
-	var dmg = getItemRealDmg(item);
-	var MyMgc = _MAGIC[_MY_SELF];
-	var EnemyChips = getChips(EnemyLeekG);
-	if (item == CHIP_SOPORIFIC) dmg *= 90;
-	if (item == CHIP_FRACTURE) dmg *=5;
-	if (isPositiv(item) || isPositiv(item) == null) return 99;
-	if (!isPositiv(item)) {
-		if (ShieldScore(leek) >= 450) Score += 5;
-		if (ShieldScore(leek) < 300) Score -= 2;
-		if (ShieldScore(leek) < 100) Score -= 5;
-		Score *= (EnemyStr/100);
-		Score += (MustFocusEnemy(EnemyLeekG));
-		if (MyMgc >= 400) {
-			Score += (getCooldown(CHIP_LIBERATION, enemy) * 0.7);
-			Score += (getCooldown(CHIP_ANTIDOTE, enemy) * 2);
-		}
-		if (!inArray(EnemyChips, CHIP_ANTIDOTE) && MyMgc >= 400) Score += 5;
-		if (!inArray(EnemyChips, CHIP_LIBERATION) && MyMgc >= 400) Score += 2;
-		if (EnemyRealLife > RealLife + ShieldScore(leek) && EnemyStr >= 400) Score += 4;
-		if (path == mp && EnemyStr >= 300 && ShieldScore(leek) > 300) Score -= 7;
-		if (EnemyRealLife * 0.70 > RealLife) Score -= 3;
-		if (RealLife > EnemyRealLife) Score += 5;
-		if (path > mp / 1.5 && EnemyStr > ShieldScore(leek) / 1.5) Score -= 5;
-
-		if (path == mp) Score -= 3;
-		if (path == getTotalMP()) Score -= 8;
-		if (path < mp / 2) Score += 5;
-		Score += ((dmg / _ITEM_COST[item]) - (path / 5));
-	}
-	return Score;
-}
-
-function Best3Items(@leek) {
-	var _ITEMS = GetItems(leek);
-	var array = [];
-	for (var i = 0; i < 5; i++) {
-		var BestTP = 99999;
-		var BestDMG = 0;
-		var BestChip;
-		for (var item in _ITEMS) {
-			var Cost = _ITEM_COST[item];
-			var dmg = getItemMinDmg(item);
-			if (!isOnlyBulb(item) && item != CHIP_DEVIL_STRIKE && dmg / Cost > BestDMG / BestTP) {
-				BestChip = item;
-				BestDMG = dmg;
-				BestTP = Cost;
-			}
-		}
-		removeElement(_ITEMS, BestChip);
-		if (BestChip != null) push(array, BestChip);
-	}
-	return array;
-}
-
-function UpdateItemsToHide() {
-	ItemsToHideSolo = [];
-	pushAll(ItemsToHideSolo, Best3Items(EnemyLeekG));
-}
-
-function getItemRealDmg(@Item) {
-	var NumberOfDMG = 0;
-	var ie = _ITEM_EFFECTS[Item];
-	for (var eff in ie) {
-		if (eff[0] == EFFECT_DAMAGE || eff[0] == EFFECT_POISON) {
-			NumberOfDMG += eff[1] * (1 + eff[3]);
-		}
-	}
-
-	for (var eff in ie) {
-		if (eff[0] == EFFECT_HEAL) {
-			NumberOfDMG = eff[1] * (1 + eff[3]);
-		}
-	}
-
-
-
-
-	for (var eff in ie) {
-		if (eff[0] == EFFECT_ABSOLUTE_SHIELD) {
-			NumberOfDMG = eff[1];
-		}
-	}
-
-
-	for (var eff in ie) {
-		if (eff[0] == EFFECT_RELATIVE_SHIELD) {
-			NumberOfDMG = eff[1];
-		}
-	}
-
-	for (var eff in ie) {
-		if (eff[0] == EFFECT_SUMMON) {
-			NumberOfDMG = bulbcoef(Item, EnemyLeekG)[1];
-		}
-	}
-
-
-
-
-	for (var eff in ie) {
-		if (eff[0] == EFFECT_BUFF_STRENGTH) {
-			NumberOfDMG = eff[1];
-		}
-	}
-
-
-
-	for (var eff in ie) {
-		if (eff[0] == EFFECT_BUFF_TP) {
-			NumberOfDMG = eff[1];
-		}
-	}
-
-
-
-
-	for (var eff in ie) {
-		if (eff[0] == EFFECT_BUFF_MP) {
-			NumberOfDMG = eff[1];
-		}
-	}
-
-
-
-
-	for (var eff in ie) {
-		if (eff[0] == EFFECT_SHACKLE_TP) {
-			NumberOfDMG = eff[1];
-		}
-	}
-
-
-	for (var eff in ie) {
-		if (eff[0] == EFFECT_SHACKLE_MP) {
-			NumberOfDMG = eff[1];
-		}
-	}
-
-
-
-	for (var eff in ie) {
-		if (eff[0] == EFFECT_SHACKLE_STRENGTH) {
-			NumberOfDMG = eff[1];
-		}
-	}
-
-	for (var eff in ie) {
-		if (eff[0] == EFFECT_VULNERABILITY) {
-			NumberOfDMG = eff[1];
-		}
-	}
-
-
-	for (var eff in ie) {
-		if (eff[0] == EFFECT_BOOST_MAX_LIFE) {
-			NumberOfDMG = eff[1];
-		}
-	}
-	for (var eff in ie) {
-		if (eff[0] == EFFECT_BUFF_AGILITY) {
-			NumberOfDMG = eff[1];
-		}
-	}
-	for (var eff in ie) {
-		if (eff[0] == EFFECT_DAMAGE_RETURN) {
-			NumberOfDMG = eff[1];
-		}
-	}
-	for (var eff in ie) {
-		if (eff[0] == EFFECT_BUFF_RESISTANCE) {
-			NumberOfDMG = eff[1];
-		}
-	}
-
-
-
-	return NumberOfDMG;
-}
-
-function getItemName(Item) {
-	if (isChip(Item)) {
-		return getChipName(Item);
-	} else return getWeaponName(Item);
-}
-
 
 function useItem(item, cell, weapon) {
-	if (isWeapon(item) && weapon != item) {
-		setWeapon(item);
-	}
+	if (isWeapon(item) && weapon != item) setWeapon(item);
 	var lol = isChip(item) ? useChipOnCell(item, cell) : useWeaponOnCell(cell);
-	return lol;
+	lol;
 }
 
-function GetItemDMG(@Item) {
-	var NumberOfDMG = 0;
-	var ie = _ITEM_EFFECTS[Item];
-	for (var eff in ie) {
-		if (eff[0] == EFFECT_DAMAGE || eff[0] == EFFECT_POISON) {
-			NumberOfDMG += max(eff[1] * (1 + eff[3]) * COEF_DMG * _STRENGTH[_MY_SELF], eff[1] * (1 + eff[3]) * COEF_DMG * _MAGIC[_MY_SELF]);
-		}
-	}
-
-	for (var eff in ie) {
-		if (eff[0] == EFFECT_HEAL) {
-			NumberOfDMG = eff[1] * (1 + eff[3]) * _COEF_HEAL;
-		}
-	}
-
-
-
-
-	for (var eff in ie) {
-		if (eff[0] == EFFECT_ABSOLUTE_SHIELD) {
-			NumberOfDMG = eff[1] * (1 + eff[3]) * _COEF_ABS_SHIELD;
-		}
-	}
-
-
-	for (var eff in ie) {
-		if (eff[0] == EFFECT_RELATIVE_SHIELD) {
-			NumberOfDMG = eff[1] * (1 + eff[3]) * _COEF_REL_SHIELD;
-		}
-	}
-
-	//debug(bulbname(ChipToName(Item), EnemyLeekG));
-	for (var eff in ie) {
-		if (eff[0] == EFFECT_SUMMON) {
-			NumberOfDMG = bulbcoef(Item, EnemyLeekG)[1] * _COEF_SUMMON;
-		}
-	}
-
-
-
-
-	for (var eff in ie) {
-		if (eff[0] == EFFECT_BUFF_STRENGTH) {
-			NumberOfDMG = eff[1] * (1 + eff[3]) * _COEF_BOOST_STR;
-		}
-	}
-
-
-
-	for (var eff in ie) {
-		if (eff[0] == EFFECT_BUFF_TP) {
-			NumberOfDMG = eff[1] * (1 + eff[3]) * _COEF_BOOST_TP;
-		}
-	}
-
-
-
-
-	for (var eff in ie) {
-		if (eff[0] == EFFECT_BUFF_MP) {
-			NumberOfDMG = eff[1] * (1 + eff[3]) * _COEF_BOOST_MP;
-		}
-	}
-
-
-
-
-	for (var eff in ie) {
-		if (eff[0] == EFFECT_SHACKLE_TP) {
-			NumberOfDMG = eff[1] * (1 + eff[3]) * COEF_SHACKLE_TP;
-		}
-	}
-
-
-	for (var eff in ie) {
-		if (eff[0] == EFFECT_SHACKLE_MP) {
-			NumberOfDMG = eff[1] * (1 + eff[3]) * _COEF_SHACKLE_MP;
-		}
-	}
-
-
-
-	for (var eff in ie) {
-		if (eff[0] == EFFECT_SHACKLE_STRENGTH) {
-			NumberOfDMG = eff[1] * (1 + eff[3]) * COEF_SHACKLE_STRENGTH * _COEF_WEAPON_SHACKLE_DMG;
-		}
-	}
-
-	for (var eff in ie) {
-		if (eff[0] == EFFECT_VULNERABILITY) {
-			NumberOfDMG = eff[1] * (1 + eff[3]) * _COEF_VULNERABILITY;
-		}
-	}
-
-
-	for (var eff in ie) {
-		if (eff[0] == EFFECT_BOOST_MAX_LIFE) {
-			NumberOfDMG = eff[1] * (1 + eff[3]) * _COEF_BOOST_MAX_LIFE;
-		}
-	}
-	for (var eff in ie) {
-		if (eff[0] == EFFECT_BUFF_AGILITY) {
-			NumberOfDMG = eff[1] * (1 + eff[3]) * _COEF_AGILITY;
-		}
-	}
-	for (var eff in ie) {
-		if (eff[0] == EFFECT_DAMAGE_RETURN) {
-			NumberOfDMG = eff[1] * (1 + eff[3]) * _COEF_DMG_RETURN;
-		}
-	}
-	for (var eff in ie) {
-		if (eff[0] == EFFECT_BUFF_RESISTANCE) {
-			NumberOfDMG = eff[1] * (1 + eff[3]) * _COEF_BOOST_RESI;
-		}
-	}
-
-
-
-	return NumberOfDMG;
-}
-
-function canUseItem(@item, @cell) {
-	var yea = isWeapon(item) ? canUseWeaponOnCell(item, cell) : canUseChipOnCell(item, cell);
-	return yea;
-}
-
-function DivideAoe(@area, @cellShoot, @CellEnemy, @DMG) {
-	if (getCellDistance(cellShoot, CellEnemy) == 0) {
-		return DMG;
-	}
-	if (getCellDistance(cellShoot, CellEnemy) == 1 && area == 1) {
-		return DMG / 2;
-	}
-	if (getCellDistance(cellShoot, CellEnemy) == 1 && area == 2) {
-		return DMG * 0.75;
-	}
-	if (getCellDistance(cellShoot, CellEnemy) == 1 && area == 3) {
-		return DMG * 0.83;
-	}
-	if (getCellDistance(cellShoot, CellEnemy) == 2 && area == 2) {
-		return DMG * 0.50;
-	}
-	if (getCellDistance(cellShoot, CellEnemy) == 2 && area == 3) {
-		return DMG * 0.67;
-	}
-	if (getCellDistance(cellShoot, CellEnemy) == 3 && area == 3) {
-		return DMG * 0.50;
-	}
-	return DMG;
-}
-
-function getBestItemToUse(@inventory, @mp, @leekatq, @leekdef, @tp) {
-	var BestItem = CHIP_ARMORING;
-	var BestDMG = 1;
-	var BestMP = 999;
-	var BestTP = 999;
-	if (count(DeadAlly()) > 0 && tp > 15) {
-		return [CHIP_RESURRECTION, 9999, 15, 0];
-	}
-	for (var i in inventory) {
-		if (getOperations() >= 15000000) {
-			break;
-		}
-		var TabCellzItem = FindItemsCellzInArrayItemsCellsTo(i);
-		var _DMG = GetItemDMG(i);
-		var ForceOrMagic = _STRENGTH[leekatq] > _MAGIC[leekatq] ? _STRENGTH[leekatq] : _MAGIC[leekatq];
-		var Target = TabCellzItem[2];
-		var Bs = TabCellzItem[3];
-		var g = TabCellzItem[4];
-		var Path = TabCellzItem[5];
-		var getpathMechant = Path * (_COEF_MP_VALUE * _TIMES_COEF_MP) + 1;
-		var coutChange = 0;
-		if (isWeapon(i) && getWeapon() != i) {
-			coutChange = 1;
-		}
-		if (_ITEM_EFFECTS[i][0][0] == EFFECT_SUMMON) getpathMechant = 1;
-		//debugE(getItemName(i) + " Power : " + GetItemDMG(i) + " Cost : " + _ITEM_COST[i] + " Path : " + getpathMechant + " isworth : " + IsWorth(i, Path, mp, Bs, _CELL[_MY_SELF], Target, leekatq) + " Target Name : " + getName(Target));
-		if (IsWorth(i, Path, mp, Bs, _CELL[_MY_SELF], Target, leekatq) > ScoreWorthItem && Bs != null && Target != null && tp >= _ITEM_COST[i] + coutChange && Path <= _MP[_MY_SELF] && BestDMG / BestTP / BestMP <= _DMG / _ITEM_COST[i] / getpathMechant) {
-			BestDMG = _DMG;
-			BestTP = _ITEM_COST[i] + coutChange;
-			BestMP = getpathMechant;
-			BestItem = i;
-		}
-	}
-
-	return [BestItem, BestDMG, BestTP, BestMP];
-
+function getBestOnlyItem(cellfrom , mp , tp , cellold) {
+StartTestFunction();
+debug("score play safe ! "+_SCORE_PLAY_SAFE);
+if (cellfrom != cellold) UpdateAllSafeScore(GetWalkableCells(getCell() , getMP()));
+var AccesCellz = GetWalkableCells(cellfrom , mp);
+var BestScore = 0;
+var BestItem ;
+var BestFrom ; 
+var BestTo ;
+var ItemScore = 0;
+var cell = 0;
+var score = 1;
+var myweap = getWeapon();
+var mytp = tp;
+	for (var item in GetItems(_MY_SELF)) {
+	if (_ITEM_IS_WEAPON[item] && myweap!=item) mytp -= 1;
+	var TimesUseItem = _ITEM_COOLDOWN[item]  > 0 ? 1 : floor(mytp/_ITEM_COST[item]);
+	var cost = (_ITEM_IS_WEAPON[item] && myweap!=item) ? (_ITEM_COST[item]*TimesUseItem+1) : (_ITEM_COST[item]*TimesUseItem);
+	if (cost>tp) continue;
+	if (tp < 8) cost = 1; // Pour eviter de prendre en compt les tp sur le last item
+		for (var from in getCellzToUseItem(AccesCellz , item)) {
+			var CAoE = getBestAoeCell(from , item , TimesUseItem);
+			if (CAoE[score]==0 || CAoE[cell]==null || !getUsableItemsFromCellToCell(from, CAoE[cell], item , [])) continue;
+			var dmgBestCell = _BEST_DMG_CELL[from];
+			if (dmgBestCell[0]==null) continue;
+			ItemScore = (CAoE[score]-(dmgBestCell[1]*_SCORE_PLAY_SAFE))/cost;
+			ItemScore -= getCellDistance(_CELL[_MY_SELF], from);
+			if (ItemScore>BestScore) {
+				BestScore = ItemScore;
+				BestItem = item;
+				BestFrom = from;
+				BestTo = CAoE[cell];
+			}
+		}//Fin from
+	}//Fin Item
+	StopTestFunction("New Only Item");
+	return [BestItem , BestFrom , BestTo];
 }
 
 function DeadAlly() {
@@ -426,7 +72,7 @@ function badAss(leek) {
 		return true;
 	} else return RealLeeklife(leek) > 0;
 }
-global os = false;
+global os;
 os = false;
 
 function OS() {
@@ -434,7 +80,7 @@ function OS() {
 		for (var leek in getAliveEnemies()) {
 			if (!isSummon(leek)) {
 				for (var item in GetItems(_MY_SELF)) {
-					var CellItem = getCelltoUseItem(item, _CELL[leek]);
+					var CellItem = getCelltoUseItem(item, _CELL[leek] , GetWalkableCells(_CELL[_MY_SELF] , _MP[_MY_SELF]));
 					var Path = getPathLength(_CELL[_MY_SELF], CellItem);
 					if (CellItem != null && _ITEM_EFFECTS[0][0] == EFFECT_POISON) {
 						if (CellItem != null && getItemMinDmg(item) * (1 + _MAGIC[_MY_SELF] / 100) > RealLeeklife(leek) && badAss(leek)) {
@@ -458,10 +104,12 @@ function OS() {
 						}
 					}
 				}
-				if (!os && RealLeeklife(leek) < 0 && _TP[_MY_SELF] >= 1 && getFightType() == FIGHT_TYPE_SOLO) {
+				if (RealLeeklife(leek) < 0 && getFightType() == FIGHT_TYPE_SOLO) {
+					if (!os && _TP>=1) {
 					var i = 0;
 					say("Attention " + getName(leek) + " je vais crash , ecarte toi ...");
 					while (true) i++;
+					}
 				}
 			}
 		}
