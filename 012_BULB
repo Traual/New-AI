@@ -10,18 +10,16 @@ function getArrayComboBulbSorted(@entity) {
 	if (entity == ENTITY_LIGHTNING_BULB) return [CHIP_DOPING, CHIP_LIGHTNING, CHIP_FLASH, CHIP_SHOCK];
 	return [null];
 }
-global Help ;
+
 function getBestOnlyChipToUseForBulb(@entity, @inventory) {
-if (_STRENGTH[_MY_SELF]>=1200) {
-	Help = ScoreWorthItem;
-	ScoreWorthItem = -15;
-}
+
+var WCellz = GetWalkableCells(_CELL[_MY_SELF] , _MP[_MY_SELF]);
 	for (var item in inventory) {
 		var Target = BestTarget(item);
-		var BestShootCell = BestCellToShoot(_MY_SELF, Target, getMP(), item);
-		var getCellToUse = getCelltoUseItem(item, BestShootCell);
+		var BestShootCell = _CELL[Target];
+		var getCellToUse = getCelltoUseItem(item, BestShootCell , WCellz);
 		var Path = getPathLength(_CELL[_MY_SELF], getCellToUse);
-		if (getCooldown(item)==0 && IsWorth(item, Path, _MP[_MY_SELF], BestShootCell, _CELL[_MY_SELF], Target, _MY_SELF) > ScoreWorthItem && BestShootCell != null && Target != null && getTP() >= _ITEM_COST[item] && Path <= _MP[_MY_SELF]) {
+		if (getCooldown(item)==0 && BestShootCell != null && Target != null && getTP() >= _ITEM_COST[item] && Path <= _MP[_MY_SELF]) {
 			return item;
 		}
 	}
@@ -29,20 +27,23 @@ if (_STRENGTH[_MY_SELF]>=1200) {
 }
 
 function AiForBulbs() {
+StartTestFunction();
+var Ops = getOperations();
 	for (var i = 0; i < 10; i++) {
+		if (getOperations()-500000>Ops) break;
 		UpdateLeekEffects();
+		var WCellz = GetWalkableCells(_CELL[_MY_SELF] , _MP[_MY_SELF]);
 		var Name = bulbname(_MY_SELF, EnemyLeekG)[0];
 		var item = getBestOnlyChipToUseForBulb(Name, getArrayComboBulbSorted(Name));
 		if (item == null) break;
 		var Target = BestTarget(item);
-		var BestShootCell = BestCellToShoot(_MY_SELF, Target, _MP[_MY_SELF], item);
-		var getCellToUse = getCelltoUseItem(item, BestShootCell);
+		var BestShootCell = _CELL[Target];
+		var getCellToUse = getCelltoUseItem(item, BestShootCell , WCellz);
 		var Path = getPathLength(_CELL[_MY_SELF], getCellToUse);
 		moveTowardCell(getCellToUse);
 		useChipOnCell(item, BestShootCell);
 	}
 	PiptronBulb();
-	moveTowardCell(HidenCellBulb(_CELL[_MY_SELF], _MP[_MY_SELF], EnemyLeekG, getSummoner()));
+	moveTowardCell(HidenCellBulb(getCell(), getMP()));
+	StopTestFunction("Bulb");
 }
-
-ScoreWorthItem = Help;
